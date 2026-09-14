@@ -1,6 +1,6 @@
 [package]
 name = "csusage"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Token usage reports for Claude Science from its local metadata database"
 license = "MIT"

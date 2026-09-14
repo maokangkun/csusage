@@ -131,7 +131,9 @@ pub fn parse_timezone(timezone: Option<&str>) -> Result<jiff::tz::TimeZone, Stri
 
 pub fn print_json(rows: &[Row]) {
     let json = serde_json::to_string_pretty(rows).unwrap();
-    println!("{json}");
+    // Ignore broken pipes so `csusage --json | head` exits cleanly.
+    use std::io::Write;
+    let _ = writeln!(std::io::stdout(), "{json}");
 }
 
 pub fn print_table(rows: &[Row], report: Report) {
@@ -140,15 +142,21 @@ pub fn print_table(rows: &[Row], report: Report) {
         Report::Monthly => "Claude Science Monthly Usage",
         Report::Session => "Claude Science Session Usage",
     };
-    println!("{title}");
-    println!("{}\n", "-".repeat(title.len()));
-    println!(
+    use std::io::Write;
+    let out = std::io::stdout();
+    let mut out = out.lock();
+    // Ignore broken pipes so `csusage | head` exits cleanly.
+    let _ = writeln!(out, "{title}");
+    let _ = writeln!(out, "{}\n", "-".repeat(title.len()));
+    let _ = writeln!(
+        out,
         "{:<38} {:>12} {:>12} {:>12} {:>13} {:>13} {:>10}",
         "Date", "Input", "Output", "Cache Read", "Cache Create", "Total Tokens", "Cost ($)"
     );
     for row in rows {
         let models = format_models(&row.models);
-        println!(
+        let _ = writeln!(
+            out,
             "{:<38} {:>12} {:>12} {:>12} {:>13} {:>13} {:>10.4}",
             format!("{}{}", row.period, models),
             row.input_tokens,
@@ -160,7 +168,7 @@ pub fn print_table(rows: &[Row], report: Report) {
         );
     }
     if rows.is_empty() {
-        println!("(no usage recorded)");
+        let _ = writeln!(out, "(no usage recorded)");
     }
 }
 
